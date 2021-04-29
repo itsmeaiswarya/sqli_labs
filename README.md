@@ -113,7 +113,7 @@
   *  so 1st letter is e as value is 101, e stands for email
 
 ## lesson9 and lesson10
-### Blind sqli Boolean-based single quotes
+### Blind sqli Time-based single quotes
   * In this lesson we can't see an error that we have tampered the query, which results in Mysql error. 
   * So now it makes us check whether SQL injection is possible and we will also use sleep command in mysql.
   * Query select if((select database()=”security”, sleep(10), null); we get the response 10s after sleep, giving us the result that a database security exists.
